@@ -32,7 +32,7 @@
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 class="text-2xl font-bold text-blue-600"><i class="fa-solid fa-feather-pointed mr-2"></i>AI Novel Co-Writer</h1>
             <div class="flex items-center space-x-2">
-                <input type="password" id="apiKey" placeholder="Nhập Gemini API Key của bạn..." class="border rounded-md px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="apiKey" placeholder="Nhập Gemini API Key..." class="border rounded-md px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-blue-500 hover:underline">Lấy Key</a>
             </div>
         </div>
@@ -69,7 +69,7 @@
             <!-- Step 1 -->
             <div id="step-1-content" class="step-content block">
                 <h2 class="text-xl font-bold mb-2">Bước 1: Nạp nguyên liệu (Raw Text)</h2>
-                <p class="text-sm text-gray-600 mb-4">Cung cấp truyện raw (tiếng Trung/Việt) để AI học thể loại, bối cảnh và tự động nảy ra ý tưởng mới.</p>
+                <p class="text-sm text-gray-600 mb-4">Cung cấp truyện raw để AI học thể loại và nảy ra ý tưởng mới.</p>
                 <div class="mb-4">
                     <input type="file" id="fileInput" multiple accept=".txt" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
@@ -82,11 +82,11 @@
             <!-- Step 2 -->
             <div id="step-2-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 2: Sáng tạo Văn án (Synopsis)</h2>
-                <p class="text-sm text-gray-600 mb-4">AI sẽ đề xuất Văn án hoàn toàn mới. Bạn hãy đọc và <b>SỬA TRỰC TIẾP</b> vào ô dưới đây nếu muốn đổi ý tưởng.</p>
+                <p class="text-sm text-gray-600 mb-4">AI sẽ đề xuất Văn án hoàn toàn mới. <b>SỬA TRỰC TIẾP</b> vào ô dưới đây nếu muốn đổi ý tưởng.</p>
                 <button onclick="generateContent('synopsis')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md hover:bg-indigo-200 transition mb-4 border border-indigo-200 font-medium">
                     <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Tạo Văn án Mới
                 </button>
-                <div id="loading-synopsis" class="hidden text-blue-600 mb-4"><span class="loader"></span> AI đang phân tích raw và vắt óc suy nghĩ...</div>
+                <div id="loading-synopsis" class="hidden text-blue-600 mb-4"><span class="loader"></span> AI đang phân tích raw...</div>
                 <textarea id="synopsisText" class="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Văn án sẽ xuất hiện ở đây..."></textarea>
                 <div class="mt-4 flex justify-between">
                     <button onclick="goToStep(1)" class="text-gray-600 hover:text-gray-900 px-4 py-2"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
@@ -97,7 +97,6 @@
             <!-- Step 3 -->
             <div id="step-3-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 3: Dàn ý chương</h2>
-                <p class="text-sm text-gray-600 mb-4">Dựa trên Văn án, AI sẽ chia chương. Bạn có thể tự gõ thêm tình tiết mình muốn vào dàn ý.</p>
                 <div class="flex items-center mb-4 gap-4">
                     <label class="text-sm">Số chương:</label>
                     <input type="number" id="numChapters" value="5" min="1" max="20" class="border rounded-md px-2 py-1 w-20">
@@ -115,30 +114,28 @@
 
             <!-- Step 4 -->
             <div id="step-4-content" class="step-content hidden">
-                <h2 class="text-xl font-bold mb-2">Bước 4: Viết Nháp & Bạn Sửa Chữa (Co-writing)</h2>
-                <p class="text-sm text-gray-600 mb-4">Copy dàn ý 1 chương vào đây. Sau khi AI viết nháp, hãy <b>SỬA TRỰC TIẾP</b> vào ô Bản Nháp (thêm hội thoại, thay đổi hành động, v.v.).</p>
+                <h2 class="text-xl font-bold mb-2">Bước 4: Viết Nháp & Sửa Chữa</h2>
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Dàn ý của chương này:</label>
-                    <textarea id="currentChapterInfo" class="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]" placeholder="Copy dàn ý của 1 chương từ Bước 3 vào đây..."></textarea>
+                    <textarea id="currentChapterInfo" class="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]" placeholder="Copy dàn ý của 1 chương vào đây..."></textarea>
                 </div>
                 <button onclick="generateContent('draft')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md hover:bg-indigo-200 transition mb-4 border border-indigo-200 font-medium w-full">
                     <i class="fa-solid fa-pen-nib mr-2"></i>AI: Viết Nháp
                 </button>
                 <div id="loading-draft" class="hidden text-blue-600 mb-4"><span class="loader"></span> Đang tạo bản nháp thô...</div>
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-green-700 mb-1"><i class="fa-solid fa-user-pen mr-1"></i> Không Gian Sửa Chữa Của Bạn:</label>
-                    <textarea id="draftText" class="w-full border-2 border-green-300 bg-green-50 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-green-500 h-96" placeholder="Bản nháp sẽ hiện ra ở đây. Bạn TỰ DO XÓA/SỬA để AI lấy đó làm chuẩn hoàn thiện."></textarea>
+                    <label class="block text-sm font-bold text-green-700 mb-1"><i class="fa-solid fa-user-pen mr-1"></i> Không Gian Sửa Chữa:</label>
+                    <textarea id="draftText" class="w-full border-2 border-green-300 bg-green-50 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-green-500 h-96" placeholder="Bản nháp sẽ hiện ra ở đây. Bạn TỰ DO XÓA/SỬA."></textarea>
                 </div>
                 <div class="mt-4 flex justify-between">
                     <button onclick="goToStep(3)" class="text-gray-600 hover:text-gray-900 px-4 py-2"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
-                    <button onclick="goToStep(5)" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">Đi tới bước Hoàn thiện <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                    <button onclick="goToStep(5)" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">Hoàn thiện <i class="fa-solid fa-arrow-right ml-2"></i></button>
                 </div>
             </div>
 
             <!-- Step 5 -->
             <div id="step-5-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 5: Bản Chính Thức</h2>
-                <p class="text-sm text-gray-600 mb-4">AI sẽ biến Bản Nháp (đã có nét bút của bạn) thành 1 chương truyện trau chuốt, mượt mà và sâu sắc.</p>
                 <button onclick="generateContent('final')" class="bg-indigo-600 text-white px-4 py-3 rounded-md hover:bg-indigo-700 transition mb-4 font-bold shadow-lg w-full text-lg">
                     <i class="fa-solid fa-book-open mr-2"></i>AI: Hoàn Thiện Chương Này
                 </button>
@@ -198,11 +195,16 @@
 
         async function callGeminiAPI(prompt, systemInstruction = "") {
             const apiKey = document.getElementById('apiKey').value.trim();
-            if (!apiKey) return alert("Vui lòng nhập Gemini API Key!");
+            if (!apiKey) {
+                alert("Vui lòng nhập Gemini API Key!");
+                return null;
+            }
             
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`;
             const requestBody = { contents: [{ parts: [{ text: prompt }] }] };
-            if (systemInstruction) requestBody.systemInstruction = { parts: [{ text: systemInstruction }] };
+            if (systemInstruction) {
+                requestBody.systemInstruction = { parts: [{ text: systemInstruction }] };
+            }
 
             try {
                 const response = await fetch(url, {
@@ -211,14 +213,20 @@
                     body: JSON.stringify(requestBody)
                 });
                 const data = await response.json();
-                if (data.error) { alert(`Lỗi API: ${data.error.message}`); return null; }
+                if (data.error) {
+                    alert(`Lỗi API: ${data.error.message}`); 
+                    return null; 
+                }
                 return data.candidates[0].content.parts[0].text;
-            } catch (error) { alert(`Lỗi kết nối: ${error.message}`); return null; }
+            } catch (error) { 
+                alert(`Lỗi kết nối: ${error.message}`); 
+                return null; 
+            }
         }
 
         async function generateContent(type) {
             let prompt = "";
-            let systemInstruction = "Bạn là một tiểu thuyết gia và biên tập viên văn học hàng đầu. Nhiệm vụ của bạn là hỗ trợ tác giả sáng tác truyện dài. Luôn viết bằng tiếng Việt tự nhiên, phong phú. Tránh dùng các từ ngữ quá kịch cỡm hoặc lặp từ.";
+            let systemInstruction = "Bạn là tiểu thuyết gia và biên tập viên văn học. Nhiệm vụ của bạn là hỗ trợ tác giả sáng tác truyện. Viết bằng tiếng Việt tự nhiên, phong phú, không lặp từ.";
             let outputElementId = "";
             let loadingElementId = `loading-${type}`;
 
@@ -229,9 +237,7 @@
 
             if (type === 'synopsis') {
                 if (!rawText) return alert("Vui lòng nhập truyện raw làm mẫu!");
-                prompt = `Dựa vào THỂ LOẠI, VĂN PHONG, và MÔ TÍP của các đoạn raw dưới đây, hãy sáng tạo ra một VĂN ÁN (Synopsis) cho một bộ truyện HOÀN TOÀN MỚI. 
-                KHÔNG sao chép y hệt nhân vật hay cốt truyện của raw, chỉ lấy đó làm cảm hứng tham khảo về mặt thể loại (ví dụ: cùng là tiên hiệp, cùng là đô thị...). 
-                Yêu cầu: Hấp dẫn, rõ bối cảnh, mâu thuẫn chính.\n\nRAW:\n${rawText.substring(0, 15000)}`;
+                prompt = `Dựa vào THỂ LOẠI, VĂN PHONG, và MÔ TÍP của đoạn raw dưới đây, hãy sáng tạo ra một VĂN ÁN (Synopsis) cho một bộ truyện HOÀN TOÀN MỚI. Yêu cầu: Hấp dẫn, rõ bối cảnh, mâu thuẫn chính.\n\nRAW:\n${rawText.substring(0, 15000)}`;
                 outputElementId = 'synopsisText';
             } else if (type === 'outline') {
                 if (!synopsisText) return alert("Cần có Văn án!");
@@ -240,17 +246,11 @@
                 outputElementId = 'outlineText';
             } else if (type === 'draft') {
                 if (!synopsisText || !chapterInfo) return alert("Cần có Văn án và Dàn ý chương!");
-                prompt = `VĂN ÁN:\n${synopsisText}\n\nDÀN Ý CHƯƠNG NÀY:\n${chapterInfo}\n\nDựa vào Văn án và Dàn ý của chương này, hãy viết NHÁP (Draft) toàn bộ nội dung của chương. Tập trung vào việc phát triển hành động, sự kiện.`;
+                prompt = `VĂN ÁN:\n${synopsisText}\n\nDÀN Ý CHƯƠNG NÀY:\n${chapterInfo}\n\nDựa vào Văn án và Dàn ý, hãy viết NHÁP (Draft) toàn bộ nội dung chương. Tập trung phát triển hành động.`;
                 outputElementId = 'draftText';
             } else if (type === 'final') {
                 if (!draftText) return alert("Cần có Bản nháp!");
-                prompt = `Đây là Bản Nháp truyện do TÁC GIẢ đã chỉnh sửa:\n${draftText}\n\nNhiệm vụ của bạn là biến bản nháp này thành CHƯƠNG CHÍNH THỨC. 
-                YÊU CẦU:
-                1. Giữ nguyên 100% tình tiết, không đổi cốt truyện.
-                2. Trau chuốt văn phong mượt mà, đậm chất văn học.
-                3. Thêm miêu tả cảnh vật, nội tâm.
-                4. Cải thiện hội thoại tự nhiên.
-                5. Độ dài dài hơn hoặc bằng bản nháp, không tóm tắt.`;
+                prompt = `Đây là Bản Nháp truyện do TÁC GIẢ đã chỉnh sửa:\n${draftText}\n\nNhiệm vụ của bạn là biến bản nháp này thành CHƯƠNG CHÍNH THỨC.\nYÊU CẦU:\n1. Giữ nguyên 100% tình tiết.\n2. Trau chuốt văn phong mượt mà.\n3. Thêm miêu tả cảnh vật, nội tâm.\n4. Cải thiện hội thoại.\n5. Độ dài phải dài hơn bản nháp.`;
                 outputElementId = 'finalText';
             }
 
