@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Novel Co-Writer Studio (Gemini 3.5 Flash)</title>
+    <title>AI Novel Co-Writer Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -200,9 +200,7 @@
                 return null;
             }
             
-            // Đường link đã được thay đổi sang sử dụng model gemini-3.5-flash
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
-            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`;
             const requestBody = { contents: [{ parts: [{ text: prompt }] }] };
             if (systemInstruction) {
                 requestBody.systemInstruction = { parts: [{ text: systemInstruction }] };
