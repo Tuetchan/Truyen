@@ -325,13 +325,28 @@
                 if (!appData.synopsisText) return alert("Cần có Văn án ở Bước 2!");
                 const numChapters = document.getElementById('numChapters').value;
                 prompt = `Dựa vào Văn án sau, lập dàn ý chi tiết cho ${numChapters} chương. Mỗi chương ghi rõ: Tiêu đề chương và Các diễn biến chính.\n\nVĂN ÁN:\n${appData.synopsisText}`;
-            } else if (type === 'draft') {
-                if (!appData.activeChapterId) return alert("Vui lòng chọn chương ở Bước 4!");
-                const currentChap = appData.chapters.find(c => c.id == appData.activeChapterId);
-                const customPrompt = document.getElementById('draftCustomPrompt').value.trim();
-                let customInst = customPrompt ? `\nYÊU CẦU ĐẶC BIỆT: ${customPrompt}\n` : "";
+           } else if (type === 'draft') {
+        if (!appData.activeChapterId) return alert("Vui lòng chọn chương ở Bước 4!");
+        const currentChap = appData.chapters.find(c => c.id == appData.activeChapterId);
+        const customPrompt = document.getElementById('draftCustomPrompt').value.trim();
+        let customInst = customPrompt ? `\n[YÊU CẦU ĐẶC BIỆT TỪ TÁC GIẢ]:\n${customPrompt}\n` : "";
+
+        prompt = `Bạn là một tiểu thuyết gia chuyên nghiệp. Hãy viết NHÁP (Draft) chi tiết cho chương truyện dựa trên các thông tin sau:
+        
+[VĂN ÁN TỔNG QUAN]:
+${appData.synopsisText}
+
+[DÀN Ý CHƯƠNG NÀY (${currentChap.title})]:
+${currentChap.outline}
+${customInst}
+[YÊU CẦU KHI VIẾT NHÁP]:
+1. Bám sát 100% Dàn ý chương, đi theo đúng trình tự tình tiết, không tự ý nhảy cóc hay cắt xén.
+2. Biến các gạch đầu dòng khô khan thành các cảnh truyện sinh động (Quy tắc: Show, don't tell - Tả thay vì kể).
+3. Tập trung xây dựng bộ khung vững chắc: Đẩy mạnh hành động, thiết lập bối cảnh rõ ràng và tạo các đoạn hội thoại có tính cách riêng.
+4. Hành văn mạch lạc, tự nhiên, ngắt đoạn hợp lý để dễ đọc.
+
+Bây giờ, hãy bắt đầu viết nội dung chương:`;
                 
-                prompt = `VĂN ÁN:\n${appData.synopsisText}\n\nDÀN Ý CHƯƠNG NÀY (${currentChap.title}):\n${currentChap.outline}\n${customInst}\nDựa vào đó, hãy viết NHÁP (Draft) toàn bộ nội dung chương này một cách chi tiết.`;
             } else if (type === 'final') {
                 if (!appData.activeChapterId) return alert("Vui lòng chọn chương ở Bước 5!");
                 const currentChap = appData.chapters.find(c => c.id == appData.activeChapterId);
