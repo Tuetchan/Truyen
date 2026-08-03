@@ -23,7 +23,7 @@
             margin-right: 8px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        textarea { resize: vertical; min-height: 180px; }
+        textarea { resize: vertical; min-height: 120px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
@@ -83,7 +83,7 @@
                 <div class="mb-4">
                     <input type="file" id="fileInput" multiple accept=".txt" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
-                <textarea id="rawText" class="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" placeholder="Hoặc dán trực tiếp truyện raw vào đây..."></textarea>
+                <textarea id="rawText" class="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm h-64" placeholder="Hoặc dán trực tiếp truyện raw vào đây..."></textarea>
                 <div class="mt-4 flex justify-end">
                     <button onclick="goToStep(2)" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i></button>
                 </div>
@@ -97,7 +97,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Tạo Văn án Mới
                 </button>
                 <div id="loading-synopsis" class="hidden text-blue-600 mb-4"><span class="loader"></span> AI đang phân tích raw...</div>
-                <textarea id="synopsisText" class="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Văn án sẽ xuất hiện ở đây..."></textarea>
+                <textarea id="synopsisText" class="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 h-64" placeholder="Văn án sẽ xuất hiện ở đây..."></textarea>
                 <div class="mt-4 flex justify-between">
                     <button onclick="goToStep(1)" class="text-gray-600 hover:text-gray-900 px-4 py-2"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
                     <button onclick="goToStep(3)" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">Lưu Văn án <i class="fa-solid fa-arrow-right ml-2"></i></button>
@@ -110,7 +110,7 @@
                 <div class="flex flex-wrap items-center mb-4 gap-4">
                     <div>
                         <label class="text-sm mr-2">Số chương:</label>
-                        <input type="number" id="numChapters" value="5" min="1" max="30" class="border rounded-md px-2 py-1 w-20">
+                        <input type="number" id="numChapters" value="5" min="1" max="50" class="border rounded-md px-2 py-1 w-20">
                     </div>
                     <button onclick="generateContent('outline')" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md hover:bg-indigo-200 transition border border-indigo-200 font-medium">
                         <i class="fa-solid fa-list-ol mr-2"></i>Tạo Dàn ý
@@ -143,12 +143,25 @@
                             <option value="">-- Chưa có chương nào (Hãy tạo ở Bước 3) --</option>
                         </select>
                     </div>
-                    <span id="chapterStatusStep4" class="text-xs bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-full font-medium">Chưa viết nháp</span>
+                    <div class="flex items-center gap-3">
+                        <span id="chapterStatusStep4" class="text-xs bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-full font-medium">Chưa viết nháp</span>
+                        <button onclick="deleteCurrentChapter()" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 transition" title="Xóa bỏ chương đang chọn"><i class="fa-solid fa-trash-can"></i> Xóa chương</button>
+                    </div>
+                </div>
+
+                <!-- Tính năng nhập chương trước -->
+                <div class="mb-4 bg-blue-50 p-3 rounded border border-blue-100">
+                    <label class="block text-sm font-bold text-blue-800 mb-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Nội dung chương trước (Cung cấp bối cảnh cho AI):</label>
+                    <textarea id="prevChapterContext" class="w-full border border-blue-200 bg-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] text-sm" placeholder="Hệ thống tự động lấy nội dung chương liền kề trước đó điền vào đây. Bạn cũng có thể tự dán thủ công để AI nắm mạch truyện..."></textarea>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-solid fa-brain mr-1"></i> Trí nhớ cốt truyện (Tự động cập nhật):</label>
-                    <textarea id="storySummaryText" oninput="appData.storySummary = this.value" class="w-full border border-gray-300 bg-gray-50 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] text-sm text-gray-700" placeholder="Chưa có tóm tắt. AI sẽ tự động gom tóm tắt sau khi bạn hoàn thành chương 5, 10, 15... để ghi nhớ cốt truyện không bị sai lệch."></textarea>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-sm font-bold text-gray-700"><i class="fa-solid fa-brain mr-1"></i> Trí nhớ cốt truyện (Tóm tắt dài hạn):</label>
+                        <button onclick="forceAutoSummarize()" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 transition shadow-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Tự động tóm tắt ngay</button>
+                    </div>
+                    <textarea id="storySummaryText" oninput="appData.storySummary = this.value" class="w-full border border-gray-300 bg-gray-50 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] text-sm text-gray-700" placeholder="AI sẽ tự động gom tóm tắt sau mỗi 5 chương. Bạn cũng có thể bấm nút Tự động tóm tắt ngay hoặc tự gõ vào đây..."></textarea>
+                    <div id="loading-summary-status" class="hidden text-xs text-indigo-600 mt-1"><span class="loader" style="width: 12px; height: 12px; border-width: 2px;"></span> Đang đúc kết cốt truyện, vui lòng đợi...</div>
                 </div>
 
                 <div class="mb-4">
@@ -168,7 +181,7 @@
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-green-700 mb-1"><i class="fa-solid fa-user-pen mr-1"></i> Không Gian Sửa Chữa (Bản nháp):</label>
-                    <textarea id="draftText" oninput="updateCurrentChapterField('draft', this.value)" class="w-full border-2 border-green-300 bg-green-50 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-green-500 h-80" placeholder="Bản nháp sẽ hiện ra ở đây. Bạn tự do sửa chữa trước khi sang bước hoàn thiện."></textarea>
+                    <textarea id="draftText" oninput="updateCurrentChapterField('draft', this.value)" class="w-full border-2 border-green-300 bg-green-50 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-green-500 h-96" placeholder="Bản nháp sẽ hiện ra ở đây. Bạn tự do sửa chữa trước khi sang bước hoàn thiện."></textarea>
                 </div>
 
                 <div class="mt-4 flex justify-between">
@@ -188,9 +201,14 @@
                             <option value="">-- Chưa có chương nào --</option>
                         </select>
                     </div>
-                    <button onclick="exportFullStory()" class="bg-emerald-600 text-white px-4 py-1.5 rounded-md text-sm hover:bg-emerald-700 transition font-medium shadow">
-                        <i class="fa-solid fa-file-arrow-down mr-1"></i> Tải toàn bộ truyện (1 file)
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="deleteCurrentChapter()" class="bg-red-100 text-red-600 px-3 py-1.5 rounded-md text-sm hover:bg-red-200 transition font-medium">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Xóa chương
+                        </button>
+                        <button onclick="exportFullStory()" class="bg-emerald-600 text-white px-4 py-1.5 rounded-md text-sm hover:bg-emerald-700 transition font-medium shadow">
+                            <i class="fa-solid fa-file-arrow-down mr-1"></i> Tải toàn bộ truyện
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -205,7 +223,7 @@
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-purple-900 mb-1">Nội dung hoàn chỉnh:</label>
-                    <textarea id="finalText" oninput="updateCurrentChapterField('final', this.value)" class="w-full border-2 border-purple-300 bg-white rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-purple-500 h-96 text-base leading-relaxed" placeholder="Kết quả hoàn hảo sẽ ở đây..."></textarea>
+                    <textarea id="finalText" oninput="updateCurrentChapterField('final', this.value)" class="w-full border-2 border-purple-300 bg-white rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-purple-500 h-[500px] text-base leading-relaxed" placeholder="Kết quả hoàn hảo sẽ ở đây..."></textarea>
                 </div>
 
                 <div class="mt-4 flex justify-between">
@@ -298,7 +316,7 @@
                 });
                 const data = await response.json();
                 if (data.error) {
-                    alert(`Lỗi API: ${data.error.message}`); 
+                    alert(`Lỗi API: ${data.error.message}\n(Phiên bản model bạn chọn có thể chưa hỗ trợ / chưa cấp quyền)`); 
                     return null; 
                 }
                 return data.candidates[0].content.parts[0].text;
@@ -335,14 +353,10 @@
                     contextPrompt += `\n[TÓM TẮT DIỄN BIẾN TRUYỆN ĐẾN HIỆN TẠI]:\n${appData.storySummary}\n`;
                 }
                 
-                const prevChapIndex = appData.chapters.findIndex(c => c.id == appData.activeChapterId) - 1;
-                if (prevChapIndex >= 0) {
-                    const prevChap = appData.chapters[prevChapIndex];
-                    if (prevChap.final) {
-                         contextPrompt += `\n[BỐI CẢNH NGAY TRƯỚC ĐÓ - Chương ${prevChap.title}]:\n${prevChap.final.substring(prevChap.final.length - 3000)} ... (Phần cuối chương trước)\n`;
-                    } else if (prevChap.draft) {
-                         contextPrompt += `\n[BỐI CẢNH NGAY TRƯỚC ĐÓ (Nháp) - Chương ${prevChap.title}]:\n${prevChap.draft.substring(prevChap.draft.length - 3000)} ... (Phần cuối chương trước)\n`;
-                    }
+                // Lấy nội dung chương trước từ ô input thay vì tự gán ngầm
+                const prevContext = document.getElementById('prevChapterContext').value.trim();
+                if (prevContext !== "") {
+                    contextPrompt += `\n[BỐI CẢNH NỘI DUNG CHƯƠNG LIỀN TRƯỚC ĐÓ (Để tiếp nối)]: \n${prevContext.substring(prevContext.length - 4000)} ... (Phần cuối)\n`;
                 }
 
                 prompt = `Bạn là một tiểu thuyết gia chuyên nghiệp. Hãy viết NHÁP (Draft) chi tiết cho chương truyện nối tiếp dựa trên các thông tin sau:
@@ -354,7 +368,7 @@ ${contextPrompt}
 ${currentChap.outline}
 ${customInst}
 [YÊU CẦU QUAN TRỌNG KHI VIẾT NHÁP]:
-1. ĐỌC KỸ TÓM TẮT VÀ BỐI CẢNH CHƯƠNG TRƯỚC: Phải viết tiếp nối liền mạch, không được sai lệch nội dung.
+1. ĐỌC KỸ BỐI CẢNH CHƯƠNG TRƯỚC: Phải viết tiếp nối liền mạch, không bị hẫng nhịp thời gian, không gian.
 2. Bám sát 100% Dàn ý chương này, đi theo đúng trình tự tình tiết.
 3. Biến các gạch đầu dòng khô khan thành các cảnh truyện sinh động (Show, don't tell).
 4. Hành văn mạch lạc, ngắt đoạn hợp lý.
@@ -393,35 +407,55 @@ Bây giờ, hãy bắt đầu viết nội dung chương mới tiếp nối mạ
 
                     const chapIndex = appData.chapters.findIndex(c => c.id == appData.activeChapterId);
                     if ((chapIndex + 1) % 5 === 0) {
-                        await autoSummarizeStoryContext(chapIndex);
+                        await autoSummarizeStoryContext(chapIndex, false);
                     }
                 }
                 saveProjectData();
             }
         }
 
-        async function autoSummarizeStoryContext(currentIndex) {
-            document.getElementById('loading-final').classList.remove('hidden');
-            document.getElementById('final-loader-text').innerText = "Đang tự động đúc kết cốt truyện 5 chương vừa qua để lưu vào trí nhớ AI...";
+        // Tự động tóm tắt hoặc Tóm tắt thủ công
+        async function forceAutoSummarize() {
+            if (!appData.chapters || appData.chapters.length === 0) return alert("Chưa có chương truyện nào để tóm tắt!");
+            const chapIndex = appData.chapters.findIndex(c => c.id == appData.activeChapterId);
+            await autoSummarizeStoryContext(chapIndex >= 0 ? chapIndex : 0, true);
+        }
+
+        async function autoSummarizeStoryContext(currentIndex, isManual = false) {
+            const statusEl = document.getElementById('loading-summary-status');
+            const summaryBox = document.getElementById('storySummaryText');
+            
+            if(isManual) statusEl.classList.remove('hidden');
+            else {
+                document.getElementById('loading-final').classList.remove('hidden');
+                document.getElementById('final-loader-text').innerText = "Đang đúc kết lại cốt truyện để AI ghi nhớ...";
+            }
             
             let recentText = "";
-            let startIndex = Math.max(0, currentIndex - 4);
+            let startIndex = Math.max(0, currentIndex - 5);
             for (let i = startIndex; i <= currentIndex; i++) {
-                if (appData.chapters[i] && appData.chapters[i].final) {
-                    recentText += `\n\n--- ${appData.chapters[i].title} ---\n${appData.chapters[i].final}`;
+                if (appData.chapters[i] && (appData.chapters[i].final || appData.chapters[i].draft)) {
+                    let textChap = appData.chapters[i].final ? appData.chapters[i].final : appData.chapters[i].draft;
+                    recentText += `\n\n--- ${appData.chapters[i].title} ---\n${textChap.substring(0, 4000)}`;
                 }
             }
 
-            let prompt = `Bạn là thư ký cốt truyện. Nhiệm vụ của bạn là CẬP NHẬT TRÍ NHỚ CỐT TRUYỆN dựa trên Tóm tắt cũ và 5 chương truyện vừa mới được viết.
+            if (recentText.trim() === "") {
+                if(isManual) alert("Các chương trước chưa có nội dung để tóm tắt.");
+                statusEl.classList.add('hidden');
+                return;
+            }
+
+            let prompt = `Bạn là thư ký cốt truyện. Nhiệm vụ: CẬP NHẬT TRÍ NHỚ CỐT TRUYỆN dựa trên Tóm tắt cũ và diễn biến các chương mới nhất.
             
 [TÓM TẮT CŨ TRƯỚC ĐÓ]:
 ${appData.storySummary || "Chưa có"}
 
-[NỘI DUNG CÁC CHƯƠNG MỚI VIẾT]:
-${recentText.substring(0, 25000)}
+[NỘI DUNG CÁC CHƯƠNG GẦN ĐÂY NHẤT]:
+${recentText}
 
 YÊU CẦU ĐÚC KẾT:
-Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm tắt cũ nếu có), chắt lọc lại toàn bộ các sự kiện quan trọng nhất, các mối quan hệ, trạng thái nhân vật và mâu thuẫn đang diễn ra. KHÔNG cần phân tích văn phong, chỉ liệt kê tình tiết (Ai, làm gì, ở đâu, hậu quả thế nào).`;
+Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tóm tắt cũ nếu có). Chắt lọc sự kiện quan trọng, mâu thuẫn hiện tại, trạng thái nhân vật. KHÔNG phân tích, chỉ liệt kê mạch truyện.`;
 
             const apiKey = document.getElementById('apiKey').value.trim();
             const selectedModel = document.getElementById('modelSelect').value;
@@ -437,14 +471,40 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
                 if (data.candidates && data.candidates[0]) {
                     const newSummary = data.candidates[0].content.parts[0].text;
                     appData.storySummary = newSummary;
-                    document.getElementById('storySummaryText').value = newSummary;
+                    summaryBox.value = newSummary;
+                    if(isManual) alert("Đã tóm tắt thành công!");
                 }
             } catch (e) {
-                console.error("Lỗi khi auto summarize: ", e);
+                console.error("Lỗi summarize: ", e);
+                if(isManual) alert("Lỗi khi tạo tóm tắt: " + e.message);
             } finally {
-                document.getElementById('loading-final').classList.add('hidden');
-                document.getElementById('final-loader-text').innerText = "Đang trau chuốt câu từ..."; 
+                statusEl.classList.add('hidden');
+                if(!isManual) {
+                    document.getElementById('loading-final').classList.add('hidden');
+                    document.getElementById('final-loader-text').innerText = "Đang trau chuốt câu từ..."; 
+                }
                 saveProjectData();
+            }
+        }
+
+        // Tính năng xóa chương
+        function deleteCurrentChapter() {
+            if (!appData.activeChapterId) return alert("Không có chương nào đang được chọn.");
+            
+            const chapTitle = appData.chapters.find(c => c.id == appData.activeChapterId)?.title || "chương này";
+            if (confirm(`⚠️ Bạn có chắc chắn muốn XÓA BỎ [${chapTitle}] không?\nDữ liệu sẽ bị xóa hoàn toàn và không thể khôi phục.`)) {
+                
+                appData.chapters = appData.chapters.filter(c => c.id != appData.activeChapterId);
+                
+                if (appData.chapters.length > 0) {
+                    appData.activeChapterId = appData.chapters[0].id;
+                } else {
+                    appData.activeChapterId = null;
+                }
+                
+                updateChapterSelectOptions();
+                saveProjectData();
+                alert(`Đã xóa ${chapTitle} thành công!`);
             }
         }
 
@@ -461,13 +521,7 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
             lines.forEach(line => {
                 if (line.toLowerCase().includes("chương") || line.toLowerCase().includes("chapter")) {
                     if (currentContent.trim() !== "") {
-                        foundChapters.push({
-                            id: foundChapters.length + 1,
-                            title: currentTitle,
-                            outline: currentContent.trim(),
-                            draft: "",
-                            final: ""
-                        });
+                        foundChapters.push({ id: Date.now() + Math.random(), title: currentTitle, outline: currentContent.trim(), draft: "", final: "" });
                     }
                     currentTitle = line.trim();
                     currentContent = "";
@@ -477,31 +531,25 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
             });
 
             if (currentContent.trim() !== "" || currentTitle !== "") {
-                foundChapters.push({
-                    id: foundChapters.length + 1,
-                    title: currentTitle,
-                    outline: currentContent.trim() || outline,
-                    draft: "",
-                    final: ""
-                });
+                foundChapters.push({ id: Date.now() + Math.random(), title: currentTitle, outline: currentContent.trim() || outline, draft: "", final: "" });
             }
 
             if (foundChapters.length > 0) {
-                let mergedChapters = foundChapters.map((newChap, index) => {
-                    const oldChap = appData.chapters[index];
-                    if (oldChap) {
-                        return { ...newChap, draft: oldChap.draft, final: oldChap.final };
-                    }
-                    return newChap;
-                });
-                appData.chapters = mergedChapters;
+                // Tránh ghi đè toàn bộ nếu người dùng bấm tạo lại dàn ý
+                if(appData.chapters.length > 0 && confirm("Bạn đã có danh sách chương cũ. Bấm OK để Ghi đè toàn bộ, hoặc Cancel để Hủy bỏ.")) {
+                    appData.chapters = foundChapters;
+                } else if(appData.chapters.length === 0) {
+                    appData.chapters = foundChapters;
+                } else {
+                    return; // Hủy bỏ
+                }
                 updateChapterSelectOptions();
-                alert(`Đã khởi tạo thành công ${mergedChapters.length} chương liên kết! Bạn có thể sang Bước 4 để bắt đầu viết.`);
+                alert(`Đã khởi tạo thành công ${foundChapters.length} chương! Bạn có thể sang Bước 4 để bắt đầu viết.`);
                 saveProjectData();
                 goToStep(4);
             } else {
                 alert("Không tìm thấy từ khóa 'Chương' trong dàn ý. Hệ thống sẽ tạo 1 chương duy nhất.");
-                appData.chapters = [{ id: 1, title: "Chương 1", outline: outline, draft: "", final: "" }];
+                appData.chapters = [{ id: Date.now(), title: "Chương 1", outline: outline, draft: "", final: "" }];
                 updateChapterSelectOptions();
                 saveProjectData();
                 goToStep(4);
@@ -531,6 +579,12 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
                 if (select4) select4.value = appData.activeChapterId;
                 if (select5) select5.value = appData.activeChapterId;
                 loadActiveChapterData();
+            } else {
+                // Xóa trắng ô dữ liệu nếu không còn chương nào
+                document.getElementById('currentChapterInfo').value = "";
+                document.getElementById('draftText').value = "";
+                document.getElementById('finalText').value = "";
+                document.getElementById('prevChapterContext').value = "";
             }
         }
 
@@ -542,12 +596,25 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
 
         function loadActiveChapterData() {
             if (!appData.activeChapterId) return;
-            const chap = appData.chapters.find(c => c.id == appData.activeChapterId);
-            if (!chap) return;
+            const chapIndex = appData.chapters.findIndex(c => c.id == appData.activeChapterId);
+            if (chapIndex === -1) return;
+            
+            const chap = appData.chapters[chapIndex];
 
             if (document.getElementById('currentChapterInfo')) document.getElementById('currentChapterInfo').value = chap.outline || "";
             if (document.getElementById('draftText')) document.getElementById('draftText').value = chap.draft || "";
             if (document.getElementById('finalText')) document.getElementById('finalText').value = chap.final || "";
+
+            // Tự động kéo nội dung chương trước điền vào prevChapterContext
+            const prevContextEl = document.getElementById('prevChapterContext');
+            if (prevContextEl) {
+                if (chapIndex > 0) {
+                    const prevChap = appData.chapters[chapIndex - 1];
+                    prevContextEl.value = prevChap.final ? prevChap.final : (prevChap.draft ? prevChap.draft : "");
+                } else {
+                    prevContextEl.value = "";
+                }
+            }
 
             if (document.getElementById('chapterSelectStep4') && document.getElementById('chapterSelectStep4').value != appData.activeChapterId)
                 document.getElementById('chapterSelectStep4').value = appData.activeChapterId;
@@ -583,7 +650,6 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
             }
         }
 
-        /* ================== PHẦN CODE ĐÃ SỬA VÀ BỔ SUNG HOÀN CHỈNH ================== */
         function syncMemoryFromFields() {
             if (document.getElementById('rawText')) appData.rawText = document.getElementById('rawText').value;
             if (document.getElementById('synopsisText')) appData.synopsisText = document.getElementById('synopsisText').value;
@@ -615,7 +681,6 @@ Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm t
             syncMemoryFromFields();
             localStorage.setItem('ai_novel_studio_project', JSON.stringify(appData));
             
-            // Cập nhật giao diện nút lưu
             const btn = document.querySelector('button[onclick="saveProjectData()"]');
             if (btn) {
                 const originalHTML = btn.innerHTML;
