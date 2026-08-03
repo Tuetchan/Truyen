@@ -33,10 +33,9 @@
             <h1 class="text-xl font-bold text-blue-600"><i class="fa-solid fa-feather-pointed mr-2"></i>AI Novel Co-Writer Studio</h1>
             <div class="flex flex-wrap items-center gap-3">
                 <select id="modelSelect" class="border rounded-md px-2 py-1.5 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="gemini-3.5-flash">Gemini 3.5 Flash (Khuyên dùng)</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Khuyên dùng)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                     <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                    <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
                 </select>
                 <input type="password" id="apiKey" placeholder="Nhập Gemini API Key..." class="border rounded-md px-3 py-1.5 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-blue-500 hover:underline">Lấy Key</a>
@@ -70,7 +69,7 @@
                 </ul>
                 
                 <div class="mt-6 pt-4 border-t text-xs text-gray-500">
-                    <p><i class="fa-solid.fa-circle-info mr-1"></i> Dữ liệu tự động lưu vào trình duyệt của bạn.</p>
+                    <p><i class="fa-solid fa-circle-info mr-1"></i> Dữ liệu tự động lưu vào trình duyệt của bạn.</p>
                 </div>
             </div>
         </div>
@@ -137,7 +136,6 @@
             <div id="step-4-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 4: Viết Nháp & Sửa Chữa</h2>
                 
-                <!-- Thanh chọn chương liên kết -->
                 <div class="mb-4 p-3 bg-gray-100 rounded-lg flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
                         <label class="font-bold text-sm text-gray-700"><i class="fa-solid fa-book-bookmark mr-1"></i> Chọn chương:</label>
@@ -146,6 +144,11 @@
                         </select>
                     </div>
                     <span id="chapterStatusStep4" class="text-xs bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-full font-medium">Chưa viết nháp</span>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-solid fa-brain mr-1"></i> Trí nhớ cốt truyện (Tự động cập nhật):</label>
+                    <textarea id="storySummaryText" oninput="appData.storySummary = this.value" class="w-full border border-gray-300 bg-gray-50 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] text-sm text-gray-700" placeholder="Chưa có tóm tắt. AI sẽ tự động gom tóm tắt sau khi bạn hoàn thành chương 5, 10, 15... để ghi nhớ cốt truyện không bị sai lệch."></textarea>
                 </div>
 
                 <div class="mb-4">
@@ -178,7 +181,6 @@
             <div id="step-5-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 5: Bản Chính Thức & Xuất Truyện</h2>
                 
-                <!-- Thanh chọn chương liên kết -->
                 <div class="mb-4 p-3 bg-gray-100 rounded-lg flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
                         <label class="font-bold text-sm text-gray-700"><i class="fa-solid fa-book-bookmark mr-1"></i> Chọn chương:</label>
@@ -199,7 +201,7 @@
                 <button onclick="generateContent('final')" class="bg-indigo-600 text-white px-4 py-3 rounded-md hover:bg-indigo-700 transition mb-4 font-bold shadow-lg w-full text-lg">
                     <i class="fa-solid fa-book-open mr-2"></i>AI: Hoàn Thiện Chương Này
                 </button>
-                <div id="loading-final" class="hidden text-blue-600 mb-4"><span class="loader"></span> Đang trau chuốt câu từ...</div>
+                <div id="loading-final" class="hidden text-blue-600 mb-4"><span class="loader" id="final-loader-icon"></span> <span id="final-loader-text">Đang trau chuốt câu từ...</span></div>
                 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-purple-900 mb-1">Nội dung hoàn chỉnh:</label>
@@ -220,11 +222,11 @@
             rawText: "",
             synopsisText: "",
             outlineText: "",
-            chapters: [], // [{ id: 1, title: "Chương 1", outline: "", draft: "", final: "" }]
+            storySummary: "", 
+            chapters: [], 
             activeChapterId: null
         };
 
-        // Khởi tạo khi load trang
         window.onload = function() {
             loadProjectData();
         };
@@ -252,11 +254,9 @@
                     span.innerText = stepNum;
                 }
             });
-            // Đồng bộ dữ liệu hiển thị từ bộ nhớ tạm
             syncFieldsFromMemory();
         }
 
-        // Xử lý upload file raw
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const files = e.target.files;
             let combinedText = "";
@@ -276,7 +276,6 @@
             });
         });
 
-        // Hàm gọi API Gemini tích hợp chọn Model
         async function callGeminiAPI(prompt, systemInstruction = "") {
             const apiKey = document.getElementById('apiKey').value.trim();
             const selectedModel = document.getElementById('modelSelect').value;
@@ -286,7 +285,6 @@
             }
             
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-            
             const requestBody = { contents: [{ parts: [{ text: prompt }] }] };
             if (systemInstruction) {
                 requestBody.systemInstruction = { parts: [{ text: systemInstruction }] };
@@ -310,10 +308,9 @@
             }
         }
 
-        // Sinh nội dung qua AI (Văn án, Dàn ý, Nháp, Hoàn thiện)
         async function generateContent(type) {
             let prompt = "";
-            let systemInstruction = "Bạn là tiểu thuyết gia và biên tập viên văn học xuất sắc. Hỗ trợ tác giả sáng tác truyện bằng tiếng Việt mượt mà, phong phú, không lặp từ.";
+            let systemInstruction = "Bạn là tiểu thuyết gia và biên tập viên văn học xuất sắc. Hỗ trợ tác giả sáng tác truyện bằng tiếng Việt mượt mà, phong phú, logic, không bị lặp từ.";
             let loadingElementId = `loading-${type}`;
 
             syncMemoryFromFields();
@@ -321,31 +318,48 @@
             if (type === 'synopsis') {
                 if (!appData.rawText) return alert("Vui lòng nhập truyện raw ở Bước 1!");
                 prompt = `Dựa vào THỂ LOẠI, VĂN PHONG, và MÔ TÍP của đoạn raw dưới đây, hãy sáng tạo ra một VĂN ÁN (Synopsis) cho bộ truyện HOÀN TOÀN MỚI. Yêu cầu: Hấp dẫn, rõ bối cảnh, mâu thuẫn chính.\n\nRAW:\n${appData.rawText.substring(0, 15000)}`;
+            
             } else if (type === 'outline') {
                 if (!appData.synopsisText) return alert("Cần có Văn án ở Bước 2!");
                 const numChapters = document.getElementById('numChapters').value;
                 prompt = `Dựa vào Văn án sau, lập dàn ý chi tiết cho ${numChapters} chương. Mỗi chương ghi rõ: Tiêu đề chương và Các diễn biến chính.\n\nVĂN ÁN:\n${appData.synopsisText}`;
-           } else if (type === 'draft') {
-        if (!appData.activeChapterId) return alert("Vui lòng chọn chương ở Bước 4!");
-        const currentChap = appData.chapters.find(c => c.id == appData.activeChapterId);
-        const customPrompt = document.getElementById('draftCustomPrompt').value.trim();
-        let customInst = customPrompt ? `\n[YÊU CẦU ĐẶC BIỆT TỪ TÁC GIẢ]:\n${customPrompt}\n` : "";
+            
+            } else if (type === 'draft') {
+                if (!appData.activeChapterId) return alert("Vui lòng chọn chương ở Bước 4!");
+                const currentChap = appData.chapters.find(c => c.id == appData.activeChapterId);
+                const customPrompt = document.getElementById('draftCustomPrompt').value.trim();
+                let customInst = customPrompt ? `\n[YÊU CẦU ĐẶC BIỆT TỪ TÁC GIẢ]:\n${customPrompt}\n` : "";
 
-        prompt = `Bạn là một tiểu thuyết gia chuyên nghiệp. Hãy viết NHÁP (Draft) chi tiết cho chương truyện dựa trên các thông tin sau:
-        
+                let contextPrompt = "";
+                if (appData.storySummary.trim() !== "") {
+                    contextPrompt += `\n[TÓM TẮT DIỄN BIẾN TRUYỆN ĐẾN HIỆN TẠI]:\n${appData.storySummary}\n`;
+                }
+                
+                const prevChapIndex = appData.chapters.findIndex(c => c.id == appData.activeChapterId) - 1;
+                if (prevChapIndex >= 0) {
+                    const prevChap = appData.chapters[prevChapIndex];
+                    if (prevChap.final) {
+                         contextPrompt += `\n[BỐI CẢNH NGAY TRƯỚC ĐÓ - Chương ${prevChap.title}]:\n${prevChap.final.substring(prevChap.final.length - 3000)} ... (Phần cuối chương trước)\n`;
+                    } else if (prevChap.draft) {
+                         contextPrompt += `\n[BỐI CẢNH NGAY TRƯỚC ĐÓ (Nháp) - Chương ${prevChap.title}]:\n${prevChap.draft.substring(prevChap.draft.length - 3000)} ... (Phần cuối chương trước)\n`;
+                    }
+                }
+
+                prompt = `Bạn là một tiểu thuyết gia chuyên nghiệp. Hãy viết NHÁP (Draft) chi tiết cho chương truyện nối tiếp dựa trên các thông tin sau:
+                
 [VĂN ÁN TỔNG QUAN]:
 ${appData.synopsisText}
-
+${contextPrompt}
 [DÀN Ý CHƯƠNG NÀY (${currentChap.title})]:
 ${currentChap.outline}
 ${customInst}
-[YÊU CẦU KHI VIẾT NHÁP]:
-1. Bám sát 100% Dàn ý chương, đi theo đúng trình tự tình tiết, không tự ý nhảy cóc hay cắt xén.
-2. Biến các gạch đầu dòng khô khan thành các cảnh truyện sinh động (Quy tắc: Show, don't tell - Tả thay vì kể).
-3. Tập trung xây dựng bộ khung vững chắc: Đẩy mạnh hành động, thiết lập bối cảnh rõ ràng và tạo các đoạn hội thoại có tính cách riêng.
-4. Hành văn mạch lạc, tự nhiên, ngắt đoạn hợp lý để dễ đọc.
+[YÊU CẦU QUAN TRỌNG KHI VIẾT NHÁP]:
+1. ĐỌC KỸ TÓM TẮT VÀ BỐI CẢNH CHƯƠNG TRƯỚC: Phải viết tiếp nối liền mạch, không được sai lệch nội dung.
+2. Bám sát 100% Dàn ý chương này, đi theo đúng trình tự tình tiết.
+3. Biến các gạch đầu dòng khô khan thành các cảnh truyện sinh động (Show, don't tell).
+4. Hành văn mạch lạc, ngắt đoạn hợp lý.
 
-Bây giờ, hãy bắt đầu viết nội dung chương:`;
+Bây giờ, hãy bắt đầu viết nội dung chương mới tiếp nối mạch truyện:`;
                 
             } else if (type === 'final') {
                 if (!appData.activeChapterId) return alert("Vui lòng chọn chương ở Bước 5!");
@@ -375,18 +389,70 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
                     const currentChap = appData.chapters.find(c => c.id == appData.activeChapterId);
                     if(currentChap) currentChap.final = result;
                     document.getElementById('finalText').value = result;
+                    updateChapterStatusUI();
+
+                    const chapIndex = appData.chapters.findIndex(c => c.id == appData.activeChapterId);
+                    if ((chapIndex + 1) % 5 === 0) {
+                        await autoSummarizeStoryContext(chapIndex);
+                    }
                 }
                 saveProjectData();
             }
         }
 
-        // Tự động phân tách dàn ý thành danh sách các chương liên kết
+        async function autoSummarizeStoryContext(currentIndex) {
+            document.getElementById('loading-final').classList.remove('hidden');
+            document.getElementById('final-loader-text').innerText = "Đang tự động đúc kết cốt truyện 5 chương vừa qua để lưu vào trí nhớ AI...";
+            
+            let recentText = "";
+            let startIndex = Math.max(0, currentIndex - 4);
+            for (let i = startIndex; i <= currentIndex; i++) {
+                if (appData.chapters[i] && appData.chapters[i].final) {
+                    recentText += `\n\n--- ${appData.chapters[i].title} ---\n${appData.chapters[i].final}`;
+                }
+            }
+
+            let prompt = `Bạn là thư ký cốt truyện. Nhiệm vụ của bạn là CẬP NHẬT TRÍ NHỚ CỐT TRUYỆN dựa trên Tóm tắt cũ và 5 chương truyện vừa mới được viết.
+            
+[TÓM TẮT CŨ TRƯỚC ĐÓ]:
+${appData.storySummary || "Chưa có"}
+
+[NỘI DUNG CÁC CHƯƠNG MỚI VIẾT]:
+${recentText.substring(0, 25000)}
+
+YÊU CẦU ĐÚC KẾT:
+Hãy viết một bản tóm tắt khoảng 500-800 từ (gom chung với tóm tắt cũ nếu có), chắt lọc lại toàn bộ các sự kiện quan trọng nhất, các mối quan hệ, trạng thái nhân vật và mâu thuẫn đang diễn ra. KHÔNG cần phân tích văn phong, chỉ liệt kê tình tiết (Ai, làm gì, ở đâu, hậu quả thế nào).`;
+
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const selectedModel = document.getElementById('modelSelect').value;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await response.json();
+                if (data.candidates && data.candidates[0]) {
+                    const newSummary = data.candidates[0].content.parts[0].text;
+                    appData.storySummary = newSummary;
+                    document.getElementById('storySummaryText').value = newSummary;
+                }
+            } catch (e) {
+                console.error("Lỗi khi auto summarize: ", e);
+            } finally {
+                document.getElementById('loading-final').classList.add('hidden');
+                document.getElementById('final-loader-text').innerText = "Đang trau chuốt câu từ..."; 
+                saveProjectData();
+            }
+        }
+
         function parseAndInitChapters() {
             syncMemoryFromFields();
             const outline = appData.outlineText;
             if (!outline) return alert("Chưa có nội dung Dàn ý để phân tách!");
 
-            // Cố gắng tìm các dòng bắt đầu bằng "Chương" hoặc "Chapter"
             const lines = outline.split('\n');
             let foundChapters = [];
             let currentTitle = "Chương mở đầu";
@@ -410,7 +476,6 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
                 }
             });
 
-            // Đẩy chương cuối
             if (currentContent.trim() !== "" || currentTitle !== "") {
                 foundChapters.push({
                     id: foundChapters.length + 1,
@@ -422,10 +487,16 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
             }
 
             if (foundChapters.length > 0) {
-                // Giữ lại nội dung nháp/final cũ nếu trùng ID chương nếu có
-                appData.chapters = foundChapters;
+                let mergedChapters = foundChapters.map((newChap, index) => {
+                    const oldChap = appData.chapters[index];
+                    if (oldChap) {
+                        return { ...newChap, draft: oldChap.draft, final: oldChap.final };
+                    }
+                    return newChap;
+                });
+                appData.chapters = mergedChapters;
                 updateChapterSelectOptions();
-                alert(`Đã khởi tạo thành công ${foundChapters.length} chương liên kết! Bạn có thể sang Bước 4 để bắt đầu viết.`);
+                alert(`Đã khởi tạo thành công ${mergedChapters.length} chương liên kết! Bạn có thể sang Bước 4 để bắt đầu viết.`);
                 saveProjectData();
                 goToStep(4);
             } else {
@@ -437,7 +508,6 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
             }
         }
 
-        // Cập nhật các thẻ <select> chọn chương ở Bước 4 và Bước 5
         function updateChapterSelectOptions() {
             const select4 = document.getElementById('chapterSelectStep4');
             const select5 = document.getElementById('chapterSelectStep5');
@@ -451,40 +521,37 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
                 });
             }
 
-            select4.innerHTML = optionsHTML;
-            select5.innerHTML = optionsHTML;
+            if (select4) select4.innerHTML = optionsHTML;
+            if (select5) select5.innerHTML = optionsHTML;
 
             if (appData.chapters.length > 0) {
                 if (!appData.activeChapterId || !appData.chapters.some(c => c.id == appData.activeChapterId)) {
                     appData.activeChapterId = appData.chapters[0].id;
                 }
-                select4.value = appData.activeChapterId;
-                select5.value = appData.activeChapterId;
+                if (select4) select4.value = appData.activeChapterId;
+                if (select5) select5.value = appData.activeChapterId;
                 loadActiveChapterData();
             }
         }
 
-        // Chuyển đổi qua lại giữa các chương
         function switchActiveChapter(chapId) {
             syncMemoryFromFields();
             appData.activeChapterId = chapId;
             loadActiveChapterData();
         }
 
-        // Đổ dữ liệu của chương đang chọn vào form giao diện
         function loadActiveChapterData() {
             if (!appData.activeChapterId) return;
             const chap = appData.chapters.find(c => c.id == appData.activeChapterId);
             if (!chap) return;
 
-            document.getElementById('currentChapterInfo').value = chap.outline || "";
-            document.getElementById('draftText').value = chap.draft || "";
-            document.getElementById('finalText').value = chap.final || "";
+            if (document.getElementById('currentChapterInfo')) document.getElementById('currentChapterInfo').value = chap.outline || "";
+            if (document.getElementById('draftText')) document.getElementById('draftText').value = chap.draft || "";
+            if (document.getElementById('finalText')) document.getElementById('finalText').value = chap.final || "";
 
-            // Đồng bộ giá trị select 2 bên Bước 4 và 5
-            if(document.getElementById('chapterSelectStep4').value != appData.activeChapterId)
+            if (document.getElementById('chapterSelectStep4') && document.getElementById('chapterSelectStep4').value != appData.activeChapterId)
                 document.getElementById('chapterSelectStep4').value = appData.activeChapterId;
-            if(document.getElementById('chapterSelectStep5').value != appData.activeChapterId)
+            if (document.getElementById('chapterSelectStep5') && document.getElementById('chapterSelectStep5').value != appData.activeChapterId)
                 document.getElementById('chapterSelectStep5').value = appData.activeChapterId;
 
             updateChapterStatusUI();
@@ -493,7 +560,7 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
         function updateChapterStatusUI() {
             const chap = appData.chapters.find(c => c.id == appData.activeChapterId);
             const statusEl = document.getElementById('chapterStatusStep4');
-            if (!chap) return;
+            if (!chap || !statusEl) return;
 
             if (chap.final) {
                 statusEl.className = "text-xs bg-purple-100 text-purple-800 px-2.5 py-1 rounded-full font-medium";
@@ -507,7 +574,6 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
             }
         }
 
-        // Cập nhật dữ liệu thời gian thực vào bộ nhớ object khi người dùng gõ phím
         function updateCurrentChapterField(field, value) {
             if (!appData.activeChapterId) return;
             const chap = appData.chapters.find(c => c.id == appData.activeChapterId);
@@ -517,33 +583,45 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
             }
         }
 
+        /* ================== PHẦN CODE ĐÃ SỬA VÀ BỔ SUNG HOÀN CHỈNH ================== */
         function syncMemoryFromFields() {
-            appData.rawText = document.getElementById('rawText').value;
-            appData.synopsisText = document.getElementById('synopsisText').value;
-            appData.outlineText = document.getElementById('outlineText').value;
-            
+            if (document.getElementById('rawText')) appData.rawText = document.getElementById('rawText').value;
+            if (document.getElementById('synopsisText')) appData.synopsisText = document.getElementById('synopsisText').value;
+            if (document.getElementById('outlineText')) appData.outlineText = document.getElementById('outlineText').value;
+            if (document.getElementById('storySummaryText')) appData.storySummary = document.getElementById('storySummaryText').value;
+
             if (appData.activeChapterId) {
                 const chap = appData.chapters.find(c => c.id == appData.activeChapterId);
                 if (chap) {
-                    chap.outline = document.getElementById('currentChapterInfo').value;
-                    chap.draft = document.getElementById('draftText').value;
-                    chap.final = document.getElementById('finalText').value;
+                    chap.outline = document.getElementById('currentChapterInfo') ? document.getElementById('currentChapterInfo').value : chap.outline;
+                    chap.draft = document.getElementById('draftText') ? document.getElementById('draftText').value : chap.draft;
+                    chap.final = document.getElementById('finalText') ? document.getElementById('finalText').value : chap.final;
                 }
             }
         }
 
         function syncFieldsFromMemory() {
-            document.getElementById('rawText').value = appData.rawText || "";
-            document.getElementById('synopsisText').value = appData.synopsisText || "";
-            document.getElementById('outlineText').value = appData.outlineText || "";
-            updateChapterSelectOptions();
+            if (document.getElementById('rawText')) document.getElementById('rawText').value = appData.rawText || "";
+            if (document.getElementById('synopsisText')) document.getElementById('synopsisText').value = appData.synopsisText || "";
+            if (document.getElementById('outlineText')) document.getElementById('outlineText').value = appData.outlineText || "";
+            if (document.getElementById('storySummaryText')) document.getElementById('storySummaryText').value = appData.storySummary || "";
+            
+            if (typeof updateChapterSelectOptions === 'function') {
+                updateChapterSelectOptions();
+            }
         }
 
-        // Lưu trữ tự động vào localStorage
         function saveProjectData() {
             syncMemoryFromFields();
             localStorage.setItem('ai_novel_studio_project', JSON.stringify(appData));
-            alert("Đã lưu tiến trình ghi nhớ thành công!");
+            
+            // Cập nhật giao diện nút lưu
+            const btn = document.querySelector('button[onclick="saveProjectData()"]');
+            if (btn) {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check mr-1 text-green-600"></i> Đã lưu';
+                setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+            }
         }
 
         function loadProjectData() {
@@ -551,25 +629,34 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
             if (saved) {
                 try {
                     appData = JSON.parse(saved);
+                    if(appData.storySummary === undefined) appData.storySummary = "";
                     syncFieldsFromMemory();
-                } catch(e) { console.error(e); }
+                    
+                    if (appData.chapters && appData.chapters.length > 0) goToStep(4);
+                    else if (appData.outlineText) goToStep(3);
+                    else goToStep(1);
+                } catch(e) { 
+                    console.error("Lỗi khi tải dữ liệu: ", e); 
+                }
             }
         }
 
-        // Chức năng copy riêng 1 chương
         function copyCurrentFinalText() {
-            const text = document.getElementById('finalText').value;
-            navigator.clipboard.writeText(text).then(() => alert("Đã copy nội dung chương này!"));
+            const textEl = document.getElementById('finalText');
+            if (!textEl || !textEl.value) {
+                alert("Chưa có nội dung để copy!");
+                return;
+            }
+            navigator.clipboard.writeText(textEl.value).then(() => alert("Đã copy nội dung chương này!"));
         }
 
-        // Xuất toàn bộ truyện thành 1 file .txt duy nhất
         function exportFullStory() {
             syncMemoryFromFields();
-            if (appData.chapters.length === 0) return alert("Chưa có chương nào để xuất!");
+            if (!appData.chapters || appData.chapters.length === 0) return alert("Chưa có chương nào để xuất!");
 
-            let fullContent = `=== VĂN ÁN TỔNG QUAN ===\n${appData.synopsisText}\n\n====================\n\n`;
+            let fullContent = `=== VĂN ÁN TỔNG QUAN ===\n${appData.synopsisText || "Chưa có văn án"}\n\n====================\n\n`;
             
-            appData.chapters.forEach((chap, idx) => {
+            appData.chapters.forEach((chap) => {
                 fullContent += `\n\n### ${chap.title.toUpperCase()} ###\n\n`;
                 fullContent += chap.final ? chap.final : (chap.draft ? chap.draft : `[Chương chưa được viết nội dung]`);
                 fullContent += `\n\n----------------------------------------\n`;
@@ -579,7 +666,7 @@ Bây giờ, hãy bắt đầu viết nội dung chương:`;
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'ToanBieuTruyen_AI_CoWriter.txt';
+            a.download = 'ToanBoTruyen_AI_CoWriter.txt';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
