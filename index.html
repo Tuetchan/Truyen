@@ -298,10 +298,16 @@
                         <!-- Danh sách chương sinh ra bằng JS sẽ nằm ở đây -->
                     </div>
                     
-                    <button onclick="syncSplitToProject()" class="mt-6 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition w-full font-bold shadow flex justify-center items-center gap-2 text-lg">
-                        <i class="fa-solid fa-file-import"></i> Chuyển các chương này vào dự án (Ghi đè)
-                    </button>
-                    <p class="text-center text-xs text-red-500 mt-2">*Lưu ý: Hành động này sẽ thay thế hoàn toàn danh sách chương bạn đang làm việc ở Bước 4 & 5.</p>
+                    <!-- KHOẢNG CÁCH NÀY ĐÃ ĐƯỢC CHÈN THÊM NÚT TẢI FILE TXT -->
+                    <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                        <button onclick="downloadSplitTxtFile()" class="bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition w-full font-bold shadow flex justify-center items-center gap-2 text-lg">
+                            <i class="fa-solid fa-download"></i> Tải về file .txt (Giữ nguyên dự án)
+                        </button>
+                        <button onclick="syncSplitToProject()" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition w-full font-bold shadow flex justify-center items-center gap-2 text-lg">
+                            <i class="fa-solid fa-file-import"></i> Chuyển vào dự án (Ghi đè)
+                        </button>
+                    </div>
+                    <p class="text-center text-xs text-red-500 mt-2">*Lưu ý: Hành động "Chuyển vào dự án" sẽ thay thế hoàn toàn danh sách chương bạn đang làm việc ở Bước 4 & 5.</p>
                 </div>
             </div>
 
@@ -810,7 +816,7 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
             URL.revokeObjectURL(url);
         }
 
-      // --- TÍNH NĂNG MỚI: CHIA CHƯƠNG TỰ ĐỘNG ---
+        // --- TÍNH NĂNG MỚI: CHIA CHƯƠNG TỰ ĐỘNG ---
         function executeSplitChapters() {
             const text = document.getElementById('splitTextContent').value;
             const wordCountTarget = parseInt(document.getElementById('splitWordCount').value) || 500;
@@ -891,6 +897,27 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
 
             document.getElementById('splitResultCount').innerText = splitChapters.length;
             document.getElementById('splitResultContainer').classList.remove('hidden');
+        }
+
+        function downloadSplitTxtFile() {
+            if (!window.tempSplitChapters || window.tempSplitChapters.length === 0) return alert("Chưa có chương nào để tải!");
+            
+            let fullContent = "";
+            window.tempSplitChapters.forEach((chap) => {
+                fullContent += `\n\n### ${chap.title.toUpperCase()} ###\n\n`;
+                fullContent += chap.final;
+                fullContent += `\n\n----------------------------------------\n`;
+            });
+
+            const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'KetQua_ChiaChuong.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function syncSplitToProject() {
