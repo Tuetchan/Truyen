@@ -810,7 +810,7 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
             URL.revokeObjectURL(url);
         }
 
-        // --- TÍNH NĂNG MỚI: CHIA CHƯƠNG TỰ ĐỘNG ---
+      // --- TÍNH NĂNG MỚI: CHIA CHƯƠNG TỰ ĐỘNG ---
         function executeSplitChapters() {
             const text = document.getElementById('splitTextContent').value;
             const wordCountTarget = parseInt(document.getElementById('splitWordCount').value) || 500;
@@ -820,7 +820,6 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
 
             if (!text.trim()) return alert("Vui lòng nhập nội dung cần chia vào ô trống!");
 
-            // ĐÃ SỬA LỖI REGEX
             const paragraphs = text.split(/\n+/);
             let currentChapterText = "";
             let currentWordCount = 0;
@@ -828,25 +827,29 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
             let currentChapIdx = startIndex;
 
             paragraphs.forEach(p => {
-                // ĐÃ SỬA LỖI REGEX
                 const wordsInP = p.trim().split(/\s+/).filter(w => w.length > 0).length;
                 if (wordsInP === 0) return;
 
-                if (currentWordCount + wordsInP > wordCountTarget && currentWordCount > 0) {
+                // LOGIC MỚI: Luôn gộp đoạn văn này vào chương hiện tại trước
+                currentChapterText += p + "\n\n";
+                currentWordCount += wordsInP;
+
+                // Sau khi gộp xong, kiểm tra xem số từ ĐÃ ĐẠT/VƯỢT mục tiêu (VD: 500) chưa?
+                // Nếu vượt rồi thì mới chốt sổ cắt chương.
+                if (currentWordCount >= wordCountTarget) {
                     splitChapters.push({
                         index: currentChapIdx,
                         content: currentChapterText.trim()
                     });
                     currentChapIdx++;
-                    currentChapterText = p + "\n\n";
-                    currentWordCount = wordsInP;
-                } else {
-                    currentChapterText += p + "\n\n";
-                    currentWordCount += wordsInP;
+                    
+                    // Reset lại túi chứa để chuẩn bị đong chữ cho chương tiếp theo
+                    currentChapterText = "";
+                    currentWordCount = 0;
                 }
             });
 
-            // Đẩy chương cuối vào mảng
+            // Đẩy phần chữ còn sót lại cuối cùng (nếu có) vào một chương cuối
             if (currentChapterText.trim().length > 0) {
                 splitChapters.push({
                     index: currentChapIdx,
@@ -872,11 +875,10 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
                     draft: "",
                     final: chap.content
                 });
-                
+
                 const chapDiv = document.createElement('div');
                 chapDiv.className = "bg-white border border-gray-200 rounded-md p-4 shadow-sm";
                 
-                // ĐÃ SỬA LỖI HTML (THIẾU THẺ SPAN) VÀ LỖI REGEX
                 chapDiv.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
                         <h4 class="font-bold text-blue-700 text-lg">${title}</h4>
