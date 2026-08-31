@@ -6,6 +6,7 @@
     <title>AI Novel Co-Writer Studio Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -27,7 +28,6 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
-    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 class="text-xl font-bold text-blue-600"><i class="fa-solid fa-feather-pointed mr-2"></i>AI Novel Co-Writer Studio</h1>
@@ -45,9 +45,7 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 py-6 w-full flex flex-col md:flex-row gap-6">
-        <!-- Sidebar Navigation -->
         <div class="w-full md:w-1/4">
             <div class="bg-white rounded-lg shadow p-4 md:sticky md:top-20">
                 <h2 class="font-semibold text-lg mb-4 border-b pb-2">Tiến trình sáng tác</h2>
@@ -70,6 +68,9 @@
                     <li class="flex items-center text-gray-400 cursor-pointer" onclick="goToStep(6)" data-step="6">
                         <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-3 text-sm">6</span> Chia chương
                     </li>
+                    <li class="flex items-center text-gray-400 cursor-pointer" onclick="goToStep(7)" data-step="7">
+                        <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-3 text-sm">7</span> Nối file text
+                    </li>
                 </ul>
                 
                 <div class="mt-6 pt-4 border-t text-xs text-gray-500">
@@ -78,9 +79,7 @@
             </div>
         </div>
 
-        <!-- Content Area -->
         <div class="w-full md:w-3/4 bg-white rounded-lg shadow p-6" id="workspace">
-            <!-- Step 1 -->
             <div id="step-1-content" class="step-content block">
                 <h2 class="text-xl font-bold mb-2">Bước 1: Nạp nguyên liệu (Raw Text)</h2>
                 <p class="text-sm text-gray-600 mb-4">Cung cấp truyện raw để AI học thể loại và nảy ra ý tưởng mới.</p>
@@ -93,7 +92,6 @@
                 </div>
             </div>
 
-            <!-- Step 2 -->
             <div id="step-2-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 2: Sáng tạo Văn án (Synopsis)</h2>
                 <p class="text-sm text-gray-600 mb-4">AI sẽ đề xuất Văn án hoàn toàn mới. <b>SỬA TRỰC TIẾP</b> vào ô dưới đây nếu muốn đổi ý tưởng.</p>
@@ -108,7 +106,6 @@
                 </div>
             </div>
 
-            <!-- Step 3 -->
             <div id="step-3-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 3: Dàn ý chương & Khởi tạo</h2>
                 <div class="flex flex-wrap items-center mb-4 gap-4">
@@ -136,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- Step 4 -->
             <div id="step-4-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 4: Viết Nháp & Sửa Chữa</h2>
                 
@@ -153,7 +149,6 @@
                     </div>
                 </div>
 
-                <!-- Tính năng nhập chương trước -->
                 <div class="mb-4 bg-blue-50 p-3 rounded border border-blue-100">
                     <label class="block text-sm font-bold text-blue-800 mb-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Nội dung chương trước (Cung cấp bối cảnh cho AI):</label>
                     <textarea id="prevChapterContext" class="w-full border border-blue-200 bg-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] text-sm" placeholder="Hệ thống tự động lấy nội dung chương liền kề trước đó điền vào đây. Bạn cũng có thể tự dán thủ công để AI nắm mạch truyện..."></textarea>
@@ -194,7 +189,6 @@
                 </div>
             </div>
 
-            <!-- Step 5 -->
             <div id="step-5-content" class="step-content hidden">
                 <h2 class="text-xl font-bold mb-2">Bước 5: Bản Chính Thức & Xuất Truyện</h2>
                 
@@ -236,78 +230,67 @@
                 </div>
             </div>
 
-            <!-- Step 6 (Tách chương tự động) -->
             <div id="step-6-content" class="step-content hidden">
                 <div class="mb-6">
-                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-list-ol"></i> Chia chương tự động</h2>
-                    <p class="text-sm text-gray-600 italic">*Tính năng sẽ tự động chia nội dung của bạn thành từng chương nhỏ (Tính năng này sẽ không cắt theo chữ, mà cắt theo đoạn. Vì vậy hãy xuống dòng thường xuyên để tỷ lệ số chữ/chương ít biến động).</p>
+                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-list-ol"></i> Chia chương & Tải thư mục ZIP</h2>
+                    <p class="text-sm text-gray-600 italic">*Dán nội dung Raw vào đây. Hệ thống sẽ tự tách dựa trên tiêu đề (Chương 1, Chap 1, 第1章...) hoặc theo số chữ và cho phép bạn tải về từng file lẻ trong một file ZIP.</p>
                 </div>
 
                 <textarea id="splitTextContent" class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 h-64 mb-6 shadow-sm" placeholder="Dán toàn bộ nội dung cần chia chương vào đây..."></textarea>
 
                 <div class="bg-white border rounded-md p-4 mb-6 shadow-sm">
-                    <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-4 mb-4 items-center">
-                        <div class="font-bold text-sm text-gray-700 flex items-center gap-2">
-                            <i class="fa-solid fa-file-word"></i> Số chữ/chương
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                         <button onclick="executeSplitByMarkers()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition font-bold shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-scissors"></i> Chia theo Tiêu đề (第一章, Chap, Chương...)
+                        </button>
+                        <div class="flex gap-2">
+                             <input type="number" id="splitWordCount" value="2000" class="w-24 border border-gray-300 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Số chữ mục tiêu mỗi chương">
+                             <button onclick="executeSplitByLength()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-bold shadow flex-grow flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-text-width"></i> Chia theo Số chữ
+                            </button>
                         </div>
-                        <div>
-                            <input type="number" id="splitWordCount" value="500" class="w-full max-w-[200px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-[150px_1fr] gap-4 items-center">
-                        <div class="font-bold text-sm text-gray-700 flex items-center gap-2">
-                            <i class="fa-solid fa-heading"></i> Tên chương
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-gray-600 block mb-1">Tiền tố</label>
-                                <input type="text" id="splitPrefix" placeholder="Có thể để trống" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-600 block mb-1">STT Chương</label>
-                                <input type="number" id="splitStartIndex" value="1" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-600 block mb-1">Hậu tố</label>
-                                <input type="text" id="splitSuffix" placeholder="Có thể để trống" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-green-700 leading-relaxed">
-                        <p>- Định dạng tên chương: <b>[Tiền Tố] + "Chương " + [STT Chương] + [Hậu Tố]</b></p>
-                        <p>- Tiền tố. Ví dụ: <span class="bg-gray-100 px-1 rounded text-red-500">Quyển 1 , Thế Giới 1</span></p>
-                        <p>- Hậu tố. Ví dụ: <span class="bg-gray-100 px-1 rounded text-red-500">Tiêu đề của chương</span></p>
-                        <p>- STT Chương là Số thứ tự bắt đầu của chương đầu tiên</p>
                     </div>
                 </div>
 
-                <button onclick="executeSplitChapters()" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition w-full font-bold shadow-md text-lg flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-scissors"></i> Bắt đầu chia chương
-                </button>
-
-                <!-- Vùng hiển thị kết quả tách chương -->
                 <div id="splitResultContainer" class="mt-8 hidden border-t-2 border-dashed pt-6">
-                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-check-circle text-green-500"></i> 
-                        Đã chia thành <span id="splitResultCount" class="text-blue-600 text-xl">0</span> chương
-                    </h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-check-circle text-green-500"></i> 
+                            Đã nhận diện <span id="splitResultCount" class="text-blue-600 text-xl">0</span> chương
+                        </h3>
+                        <button onclick="downloadChaptersZip()" class="bg-emerald-600 text-white px-6 py-2 rounded-md hover:bg-emerald-700 transition font-bold shadow-lg flex items-center gap-2">
+                            <i class="fa-solid fa-file-zipper"></i> TẢI VỀ THƯ MỤC CHƯƠNG (ZIP)
+                        </button>
+                    </div>
                     
                     <div id="splitResultList" class="space-y-4 max-h-[500px] overflow-y-auto p-4 border rounded bg-gray-50 shadow-inner">
-                        <!-- Danh sách chương sinh ra bằng JS sẽ nằm ở đây -->
-                    </div>
-                    
-                    <!-- KHOẢNG CÁCH NÀY ĐÃ ĐƯỢC CHÈN THÊM NÚT TẢI FILE TXT -->
-                    <div class="flex flex-col sm:flex-row gap-4 mt-6">
-                        <button onclick="downloadSplitTxtFile()" class="bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition w-full font-bold shadow flex justify-center items-center gap-2 text-lg">
-                            <i class="fa-solid fa-download"></i> Tải về file .txt (Giữ nguyên dự án)
+                        </div>
+                </div>
+            </div>
+
+            <div id="step-7-content" class="step-content hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-link"></i> Nối file Text lẻ thành Raw</h2>
+                    <p class="text-sm text-gray-600 italic">*Chọn nhiều file .txt từ máy tính để nối chúng lại thành một khối văn bản duy nhất.</p>
+                </div>
+
+                <div class="bg-white border rounded-md p-6 mb-6 shadow-sm">
+                    <input type="file" id="mergeFilesInput" multiple accept=".txt" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4">
+                    <button onclick="executeMergeFiles()" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition w-full font-bold shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Bắt đầu Nối File
+                    </button>
+                </div>
+
+                <div id="mergeResultContainer" class="hidden">
+                    <textarea id="mergedContentArea" class="w-full border border-gray-300 rounded-md p-3 h-96 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nội dung sau khi nối..."></textarea>
+                    <div class="flex gap-4">
+                        <button onclick="downloadMergedFile()" class="bg-emerald-600 text-white px-6 py-2 rounded-md hover:bg-emerald-700 transition font-bold shadow flex-grow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> Tải file đã nối (.txt)
                         </button>
-                        <button onclick="syncSplitToProject()" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition w-full font-bold shadow flex justify-center items-center gap-2 text-lg">
-                            <i class="fa-solid fa-file-import"></i> Chuyển vào dự án (Ghi đè)
+                        <button onclick="copyMergedToClipboard()" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition font-bold shadow flex-grow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-copy"></i> Copy toàn bộ
                         </button>
                     </div>
-                    <p class="text-center text-xs text-red-500 mt-2">*Lưu ý: Hành động "Chuyển vào dự án" sẽ thay thế hoàn toàn danh sách chương bạn đang làm việc ở Bước 4 & 5.</p>
                 </div>
             </div>
 
@@ -324,6 +307,9 @@
             chapters: [], 
             activeChapterId: null
         };
+
+        // Biến tạm cho tính năng chia chương
+        let tempSplitChapters = [];
 
         window.onload = function() {
             loadProjectData();
@@ -509,8 +495,10 @@ Bây giờ, hãy bắt đầu viết nội dung chương mới tiếp nối mạ
             
             if(isManual) statusEl.classList.remove('hidden');
             else {
-                document.getElementById('loading-final').classList.remove('hidden');
-                document.getElementById('final-loader-text').innerText = "Đang đúc kết lại cốt truyện để AI ghi nhớ...";
+                const draftLoader = document.getElementById('loading-final');
+                if(draftLoader) draftLoader.classList.remove('hidden');
+                const loaderText = document.getElementById('final-loader-text');
+                if(loaderText) loaderText.innerText = "Đang đúc kết lại cốt truyện để AI ghi nhớ...";
             }
             
             let recentText = "";
@@ -561,10 +549,8 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
                 if(isManual) alert("Lỗi khi tạo tóm tắt: " + e.message);
             } finally {
                 statusEl.classList.add('hidden');
-                if(!isManual) {
-                    document.getElementById('loading-final').classList.add('hidden');
-                    document.getElementById('final-loader-text').innerText = "Đang trau chuốt câu từ..."; 
-                }
+                const draftLoader = document.getElementById('loading-final');
+                if(draftLoader) draftLoader.classList.add('hidden');
                 saveProjectData();
             }
         }
@@ -816,120 +802,144 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
             URL.revokeObjectURL(url);
         }
 
-        // --- TÍNH NĂNG MỚI: CHIA CHƯƠNG TỰ ĐỘNG ---
-        function executeSplitChapters() {
+        // --- TÍNH NĂNG MỚI (BƯỚC 6): CHIA CHƯƠNG CHI TIẾT THEO MARKER ---
+        function executeSplitByMarkers() {
             const text = document.getElementById('splitTextContent').value;
-            const wordCountTarget = parseInt(document.getElementById('splitWordCount').value) || 500;
-            const prefix = document.getElementById('splitPrefix').value.trim();
-            const startIndex = parseInt(document.getElementById('splitStartIndex').value) || 1;
-            const suffix = document.getElementById('splitSuffix').value.trim();
+            if (!text.trim()) return alert("Vui lòng nhập nội dung!");
 
-            if (!text.trim()) return alert("Vui lòng nhập nội dung cần chia vào ô trống!");
+            // Regex để bắt các markers bạn yêu cầu: 第1章, Chương 1, Chap, 1., ;chương...
+            const regex = /^(?:[;.\-\s]*)?(?:chương|chap(?:ter)?|第|c)\s*[0-9一二三四五六七八九十百千]+\s*(?:章)?|(?:^[0-9]+\s*[:.\-\s]+)/im;
 
-            const paragraphs = text.split(/\n+/);
-            let currentChapterText = "";
-            let currentWordCount = 0;
-            let splitChapters = [];
-            let currentChapIdx = startIndex;
+            const lines = text.split('\n');
+            tempSplitChapters = [];
+            let currentTitle = "Phần mở đầu";
+            let currentContent = "";
 
-            paragraphs.forEach(p => {
-                const wordsInP = p.trim().split(/\s+/).filter(w => w.length > 0).length;
-                if (wordsInP === 0) return;
-
-                // LOGIC MỚI: Luôn gộp đoạn văn này vào chương hiện tại trước
-                currentChapterText += p + "\n\n";
-                currentWordCount += wordsInP;
-
-                // Sau khi gộp xong, kiểm tra xem số từ ĐÃ ĐẠT/VƯỢT mục tiêu (VD: 500) chưa?
-                // Nếu vượt rồi thì mới chốt sổ cắt chương.
-                if (currentWordCount >= wordCountTarget) {
-                    splitChapters.push({
-                        index: currentChapIdx,
-                        content: currentChapterText.trim()
-                    });
-                    currentChapIdx++;
-                    
-                    // Reset lại túi chứa để chuẩn bị đong chữ cho chương tiếp theo
-                    currentChapterText = "";
-                    currentWordCount = 0;
+            lines.forEach(line => {
+                if (regex.test(line.trim())) {
+                    if (currentContent.trim() !== "") {
+                        tempSplitChapters.push({ title: currentTitle, content: currentContent.trim() });
+                    }
+                    currentTitle = line.trim().replace(/[\\/:*?"<>|]/g, "_"); // Loại bỏ ký tự cấm đặt tên file
+                    currentContent = "";
+                } else {
+                    currentContent += line + "\n";
                 }
             });
 
-            // Đẩy phần chữ còn sót lại cuối cùng (nếu có) vào một chương cuối
-            if (currentChapterText.trim().length > 0) {
-                splitChapters.push({
-                    index: currentChapIdx,
-                    content: currentChapterText.trim()
-                });
+            if (currentContent.trim() !== "" || currentTitle !== "") {
+                tempSplitChapters.push({ title: currentTitle, content: currentContent.trim() });
             }
 
-            // Render giao diện kết quả
-            window.tempSplitChapters = [];
-            const resultList = document.getElementById('splitResultList');
-            resultList.innerHTML = '';
-            
-            splitChapters.forEach(chap => {
-                let title = "";
-                if (prefix) title += prefix + " ";
-                title += "Chương " + chap.index;
-                if (suffix) title += " " + suffix;
-
-                window.tempSplitChapters.push({
-                    id: Date.now() + Math.random(),
-                    title: title,
-                    outline: "Nội dung được phân tách tự động",
-                    draft: "",
-                    final: chap.content
-                });
-
-                const chapDiv = document.createElement('div');
-                chapDiv.className = "bg-white border border-gray-200 rounded-md p-4 shadow-sm";
-                
-                chapDiv.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-blue-700 text-lg">${title}</h4>
-                        <span class="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">${chap.content.trim().split(/\s+/).length} chữ</span>
-                    </div>
-                    <textarea class="w-full text-sm border-gray-300 rounded bg-gray-50 p-3 h-32 focus:outline-none" readonly>${chap.content}</textarea>
-                `;
-                resultList.appendChild(chapDiv);
-            });
-
-            document.getElementById('splitResultCount').innerText = splitChapters.length;
-            document.getElementById('splitResultContainer').classList.remove('hidden');
+            renderSplitPreview();
         }
 
-        function downloadSplitTxtFile() {
-            if (!window.tempSplitChapters || window.tempSplitChapters.length === 0) return alert("Chưa có chương nào để tải!");
-            
-            let fullContent = "";
-            window.tempSplitChapters.forEach((chap) => {
-                fullContent += `\n\n### ${chap.title.toUpperCase()} ###\n\n`;
-                fullContent += chap.final;
-                fullContent += `\n\n----------------------------------------\n`;
+        function executeSplitByLength() {
+            const text = document.getElementById('splitTextContent').value;
+            const targetWords = parseInt(document.getElementById('splitWordCount').value) || 2000;
+            if (!text.trim()) return alert("Vui lòng nhập nội dung!");
+
+            const paragraphs = text.split(/\n+/);
+            tempSplitChapters = [];
+            let currentContent = "";
+            let currentWords = 0;
+            let count = 1;
+
+            paragraphs.forEach(p => {
+                const words = p.trim().split(/\s+/).length;
+                currentContent += p + "\n\n";
+                currentWords += words;
+
+                if (currentWords >= targetWords) {
+                    tempSplitChapters.push({ title: `Chương ${count}`, content: currentContent.trim() });
+                    currentContent = "";
+                    currentWords = 0;
+                    count++;
+                }
             });
 
-            const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
+            if (currentContent.trim() !== "") {
+                tempSplitChapters.push({ title: `Chương ${count}`, content: currentContent.trim() });
+            }
+
+            renderSplitPreview();
+        }
+
+        function renderSplitPreview() {
+            const resultList = document.getElementById('splitResultList');
+            const countEl = document.getElementById('splitResultCount');
+            const container = document.getElementById('splitResultContainer');
+
+            resultList.innerHTML = '';
+            countEl.innerText = tempSplitChapters.length;
+            container.classList.remove('hidden');
+
+            tempSplitChapters.forEach((chap, i) => {
+                const div = document.createElement('div');
+                div.className = "bg-white border rounded p-3 text-sm shadow-sm";
+                div.innerHTML = `<strong>${chap.title}</strong> - <span class="text-gray-500">${chap.content.length} ký tự</span>`;
+                resultList.appendChild(div);
+            });
+        }
+
+        async function downloadChaptersZip() {
+            if (tempSplitChapters.length === 0) return alert("Chưa có chương nào được tách!");
+
+            const zip = new JSZip();
+            const folder = zip.folder("Truyen_Raw_Tach_Chuong");
+
+            tempSplitChapters.forEach((chap, i) => {
+                // Tạo tên file: 001 - Ten Chuong.txt
+                const fileName = `${(i + 1).toString().padStart(3, '0')} - ${chap.title}.txt`;
+                folder.file(fileName, chap.content);
+            });
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(content);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'KetQua_ChiaChuong.txt';
+            a.download = "Truyen_Raw_Phan_Chuong.zip";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
 
-        function syncSplitToProject() {
-            if (!window.tempSplitChapters || window.tempSplitChapters.length === 0) return;
-            if (confirm("⚠️ Chú ý: Hành động này sẽ XÓA BỎ và THAY THẾ TOÀN BỘ danh sách chương bạn đang làm việc ở Bước 4 và 5 bằng các chương vừa tách.\n\nBạn có chắc chắn muốn tiếp tục?")) {
-                appData.chapters = window.tempSplitChapters;
-                updateChapterSelectOptions();
-                saveProjectData();
-                alert("Đã đồng bộ thành công! Chuyển sang Bước 5 để xem các chương mới.");
-                goToStep(5);
+        // --- TÍNH NĂNG MỚI (BƯỚC 7): NỐI FILE TEXT ---
+        async function executeMergeFiles() {
+            const fileInput = document.getElementById('mergeFilesInput');
+            const files = Array.from(fileInput.files);
+            
+            if (files.length === 0) return alert("Vui lòng chọn các file .txt!");
+
+            // Sắp xếp file theo tên (numeric sort để file 1, 2, 10 đúng thứ tự)
+            files.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
+
+            let mergedContent = "";
+            for (let file of files) {
+                const text = await file.text();
+                mergedContent += `\n\n--- ${file.name} ---\n\n` + text.trim();
             }
+
+            document.getElementById('mergedContentArea').value = mergedContent.trim();
+            document.getElementById('mergeResultContainer').classList.remove('hidden');
         }
+
+        function downloadMergedFile() {
+            const content = document.getElementById('mergedContentArea').value;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Truyen_Da_Noi_File.txt";
+            a.click();
+        }
+
+        function copyMergedToClipboard() {
+            const content = document.getElementById('mergedContentArea').value;
+            navigator.clipboard.writeText(content).then(() => alert("Đã copy toàn bộ nội dung!"));
+        }
+
     </script>
 </body>
 </html>
