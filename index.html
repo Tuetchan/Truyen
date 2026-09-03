@@ -74,7 +74,6 @@
                     <li class="flex items-center text-gray-400 cursor-pointer" onclick="goToStep(7)" data-step="7">
                         <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-3 text-sm">7</span> Nối file text
                     </li>
-                    <!-- ĐÃ THÊM BƯỚC 8 VÀO MENU Ở ĐÂY -->
                     <li class="flex items-center text-gray-400 cursor-pointer" onclick="goToStep(8)" data-step="8">
                         <span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-3 text-sm">8</span> Cào Truyện (Scrape)
                     </li>
@@ -374,8 +373,8 @@
                     </div>
                     <textarea id="scrapeOutput" class="w-full border-2 border-green-300 bg-white rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-green-500 h-64 text-sm mb-4" placeholder="Nội dung chữ cào được sẽ hiển thị ở đây..."></textarea>
                     
-                    <button onclick="transferScrapeToStep1()" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition w-full font-bold shadow flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Đưa đoạn Text này sang Bước 1 (Nạp nguyên liệu)
+                    <button onclick="downloadScrapedText()" class="bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition w-full font-bold shadow flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-download"></i> Tải Text Này Về Máy (.txt)
                     </button>
                 </div>
             </div>
@@ -1131,17 +1130,24 @@ Viết một bản tóm tắt khoảng 300-600 từ (kết hợp logic với tó
             }
         }
 
-        function transferScrapeToStep1() {
+        function downloadScrapedText() {
             const text = document.getElementById('scrapeOutput').value.trim();
-            if (!text || text.startsWith("LỖI:") || text.startsWith("❌")) return alert("Không có nội dung hợp lệ để chuyển!");
             
-            const rawBox = document.getElementById('rawText');
-            rawBox.value = rawBox.value ? rawBox.value + "\n\n" + text : text;
-            appData.rawText = rawBox.value;
-            saveProjectData();
+            // Chặn tải về nếu khung text trống hoặc chứa thông báo lỗi
+            if (!text || text.startsWith("LỖI:") || text.startsWith("❌")) {
+                return alert("Không có nội dung hợp lệ để tải về!");
+            }
             
-            alert("Đã chuyển nội dung sang Bước 1 thành công!");
-            goToStep(1);
+            // Tạo file .txt và tải xuống
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Truyen_Cao_Duoc.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
     </script>
